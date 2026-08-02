@@ -11,17 +11,26 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     gnupg \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install yt-dlp (Always get latest version)
 RUN pip3 install -U yt-dlp --break-system-packages
+
+# Install Deno (JS runtime yt-dlp needs for JS-challenge/PO-token solving)
+RUN curl -fsSL https://deno.land/install.sh | sh
+ENV DENO_INSTALL="/root/.deno"
+ENV PATH="$DENO_INSTALL/bin:$PATH"
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY cookies.txt /app/cookies.txt
+
+# NOTE: cookies.txt is intentionally NOT copied into the image anymore.
+# Mount it at runtime instead (see docker run/compose change below),
+# so refreshed cookies take effect without a rebuild.
 
 # Install dependencies
 RUN npm install
